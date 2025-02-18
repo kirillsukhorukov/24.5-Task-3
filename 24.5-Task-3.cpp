@@ -1,8 +1,7 @@
 #include <iostream>
 #include <string>
-#include <ctime>
 #include <chrono>
-#include <iomanip>
+#include <thread>
 
 // Функция вывода приветствия
 void hello()
@@ -63,7 +62,7 @@ bool valid_time (int& minute, int& second)
 }
 
 // Функция ввода времени, которое нужно засеч
-void input_time (std::tm& interval)
+void input_time (int& interval)
 {
     int minute;
     int second;
@@ -74,21 +73,47 @@ void input_time (std::tm& interval)
     }
     while (!valid_time(minute, second));
 
-    interval.tm_min = minute;
-    interval.tm_sec = second;
+    interval = minute*60+second;
     
     return;
 }
 
+// Функция для реализации таймера обратного отсчета
+void countdown_timer(const int& interval) 
+{
+    using namespace std::chrono;
+
+    // Системное время начала отсчета
+    auto startTime = steady_clock::now();
+    // Системное время окончания отсчета 
+    auto endTime = startTime+interval*1s;
+    // Цикл отсчета времени
+    while (steady_clock::now() < endTime) 
+    {
+        auto remaining = endTime - steady_clock::now();
+        int remainingSec = duration_cast<seconds>(remaining).count();
+
+        // Очистка текущей строку и вывод оставшегося времени
+        std::cout << "\rLeft: " << remainingSec/60 << " min : " << remainingSec%60 << " sec"<< std::flush;
+
+        // Пауза на 1 секунду
+        std::this_thread::sleep_for(1s);
+    }
+
+    // Вывод сообщения о том, что время вышло
+    std::cout << std::endl << "DING! DING! DING!" << std::endl;
+}
+
 int main ()
 {
+    // Приветствие
     hello();
-
-    std::tm interval = {0};
+    // Переменная заваемого интервала времени в секундах
+    int interval = 0;
+    // Ввод интервала
     input_time(interval);
-    
-    std::cout << "Time interval->  " << std::put_time(&interval, "%M:%S") << std::endl;
-    
-    
+    // Таймер обратного отсчета
+    countdown_timer(interval);
+
     return 1;
 }
